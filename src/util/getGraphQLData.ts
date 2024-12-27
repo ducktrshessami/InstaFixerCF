@@ -1,7 +1,7 @@
 import { DataStructure } from "./dataStructure";
-import fetchWrapper from "./fetchWrapper";
 import parseGraphQLData from "./parseGraphQLData";
 import { Post } from "./post";
+
 /**
  * 
  * @param postId The post id to fetch data for.
@@ -23,7 +23,7 @@ const getGraphQLData = async (postId: string): Promise<Post> => {
     Referer: `https://www.instagram.com/p/${postId}/`
   };
 
-    
+
   try {
     const response = await fetch(url, { headers });
 
@@ -49,9 +49,9 @@ export default async (event: FetchEvent, postId: string): Promise<DataStructure>
     console.log("GQL cache hit");
     return await cacheData.json();
   }
-  
+
   const graphQLResponse = await getGraphQLData(postId);
-  
+
   const { data } = graphQLResponse;
 
   const ParsedGraphQLData = parseGraphQLData(data);
@@ -62,7 +62,7 @@ export default async (event: FetchEvent, postId: string): Promise<DataStructure>
   };
 
   const response = new Response(JSON.stringify(extractedData), {
-    headers: { "content-type": "application/json", "Cache-Control": "s-maxage=86400"}
+    headers: { "content-type": "application/json", "Cache-Control": "s-maxage=86400" }
   });
 
   console.log("GQL cache miss");
