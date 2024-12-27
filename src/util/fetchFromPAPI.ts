@@ -1,12 +1,6 @@
 import { urlSegmentToInstagramId } from "instagram-id-to-url-segment";
-import { MediaInfoResponseRootObject } from "./postInfoResponseType";
 import { DataStructure } from "./dataStructure";
-
-
-interface Env {
-  COOKIE: string;
-  XIGAPPID: string;
-}
+import { MediaInfoResponseRootObject } from "./postInfoResponseType";
 
 const commonInstagramHeaders = {
   Accept:
@@ -38,9 +32,7 @@ const getInfo = async (id: string, env: Env): Promise<MediaInfoResponseRootObjec
   return await res.json();
 }
 
-
 export default async (event: FetchEvent, postId: string, env: Env): Promise<DataStructure> => {
-
   const cacheKey = new Request(`https://www.instagram.com/p/${postId}/papi`);
   const cache = caches.default;
 
@@ -51,9 +43,8 @@ export default async (event: FetchEvent, postId: string, env: Env): Promise<Data
   }
 
   const res = await getInfo(postId, env);
-  
-  const { items } = res;
 
+  const { items } = res;
 
   if (items.length === 0) throw new Error("No items found");
   const { carousel_media: carouselMedia } = items[0];
@@ -61,10 +52,8 @@ export default async (event: FetchEvent, postId: string, env: Env): Promise<Data
   const item = items[0];
 
   const extractedPages = carouselMedia?.map((media) => ({
-    mediaUrl:
-      media.video_versions?.[0]?.url ??
-      media.image_versions2?.candidates?.[0]?.url,
-    isVideo: !!media.video_versions?.[0]?.url
+    mediaUrl: media.image_versions2?.candidates?.[0]?.url,
+    isVideo: !!media.video_versions?.candidates?.[0]?.url
   }));
 
   const imageUrls = carouselMedia
@@ -75,9 +64,9 @@ export default async (event: FetchEvent, postId: string, env: Env): Promise<Data
   const extractedData = {
     caption: caption?.text,
     username: items[0].user.username,
-    imageUrls: imageUrls ?? [ image_versions2.candidates[0].url ],
+    imageUrls: imageUrls ?? [image_versions2.candidates[0].url],
     extractedPages: extractedPages,
-    videoUrl: video_versions?.[0]?.url,
+    videoUrl: video_versions?.candidates?.[0]?.url,
     likeCount: like_count,
     commentCount: comment_count,
     provider: "PAPI"

@@ -1,19 +1,20 @@
-import {
-  error, // creates error responses
-  json, // creates JSON responses
-  html, // creates HTML responses
-  Router // the ~440 byte router itself
-} from "itty-router";
 import he from 'he';
+import {
+  error,
+  html,
+  IRequest,
+  json,
+  Router
+} from "itty-router";
 import Constants from "./constants";
 import fetchFromPAPI from "./util/fetchFromPAPI.js";
-import scrapePostData from "./util/scrapePostData";
 import getGraphQLData from "./util/getGraphQLData";
+import scrapePostData from "./util/scrapePostData";
 
 // create a new Router
 const router = Router();
 
-async function handleGeneric(req, _env, event) {
+async function handleGeneric(req: IRequest, _env: Env, event: FetchEvent) {
   const { encodedUrl } = req.params;
   const mediaUrl = decodeURIComponent(encodedUrl);
   const urls = mediaUrl.split(",");
@@ -45,7 +46,7 @@ async function handleGeneric(req, _env, event) {
     console.log("image cache hit");
     return res;
   }
-  const { create_mosaic } = await import("../collage");
+  const { create_mosaic } = await import("../collage/index.js");
   const images = await Promise.all(
     urls.map(async (url) => {
       const imageResponse = await fetch(url, {
@@ -89,7 +90,7 @@ const allowedCountries = ["US", "GB", "CA"];
 
 const allowedASNs = [396982];
 
-async function tempRedirect(url) {
+async function tempRedirect(url: string) {
   console.error("sending elsewhere");
   const response = await fetch(url, {
     headers: {
@@ -109,7 +110,7 @@ async function tempRedirect(url) {
   return html(replacedImages);
 }
 
-const fetchData = async (event: FetchEvent, id, env) => {
+const fetchData = async (event: FetchEvent, id: string, env: Env) => {
   try {
     console.log("fetching scrape");
     const data = await scrapePostData(event, id);
@@ -149,16 +150,13 @@ const fetchData = async (event: FetchEvent, id, env) => {
 const clamp = (num: number, min: number, max: number) =>
   Math.min(Math.max(num, min), max);
 
-const embed = async (req, env, event) => {
+const embed = async (req: IRequest, env: Env, event: FetchEvent) => {
   const { id, index } = req.params;
   const { bypass, c } = req.query;
   const url = new URL(req.url);
 
   const userAgent = req.headers.get("User-Agent") || "";
   const isBotUA = userAgent.match(Constants.BOT_UA_REGEX) !== null;
-
-  const { asn } = req.cf;
-  const { country } = req.cf;
 
   const targetUrl = `https://www.instagram.com${url.pathname}`;
   if (!isBotUA && !bypass) {
@@ -208,7 +206,7 @@ const embed = async (req, env, event) => {
       ? formatter.format(commentCount)
       : undefined;
 
-    const selectedPage = clamp(Number(index), 1, extractedPages?.length);
+    const selectedPage = clamp(Number(index), 1, extractedPages?.length ?? 0);
 
     const selectedPageData = extractedPages?.[selectedPage - 1];
     const selectedPageUrl = index ? selectedPageData?.mediaUrl : undefined;
@@ -244,12 +242,12 @@ const embed = async (req, env, event) => {
     ];
 
     if (selectedPageIsVideo || videoUrl) {
-      const proxyVideo = fetchFromProxy(selectedPageUrl ?? videoUrl, "video");
+      const proxyVideo = fetchFromProxy(selectedPageUrl ?? videoUrl!, "video");
       const statsWithCaption = `${truncatedCaption}\n\n${stats}`;
       headers.push(`<link rel="alternate"
 		href="https://gginstagram.com/faux?text=${encodeURIComponent(
-      statsWithCaption
-    )}&url=${url.pathname}&provider=${provider}"
+        statsWithCaption
+      )}&url=${url.pathname}&provider=${provider}"
 		type="application/json+oembed" title=@${username}>`);
       headers.push(`<meta property="og:video" content="${proxyVideo}"/>`);
       headers.push('<meta property="og:video:type" content="video/mp4"/>');
@@ -269,9 +267,8 @@ const embed = async (req, env, event) => {
         "image"
       );
       headers.push(`<link rel="alternate"
-		href="https://gginstagram.com/faux?text=${encodeURIComponent(stats)}&url=${
-        url.pathname
-      }&provider=${provider}"
+		href="https://gginstagram.com/faux?text=${encodeURIComponent(stats)}&url=${url.pathname
+        }&provider=${provider}"
 		type="application/json+oembed" title=@${username}>`);
       headers.push(`<meta property="og:image" content="${proxyImage}"/>`);
       headers.push(`<meta property="twitter:image" content="${proxyImage}"/>`);
@@ -291,14 +288,14 @@ const embed = async (req, env, event) => {
       </html>
       <body>
       ${JSON.stringify({
-        imageUrls,
-        caption: truncatedCaption,
-        likeCount,
-        commentCount,
-        username,
-        extractedPages,
-        provider
-      })}
+      imageUrls,
+      caption: truncatedCaption,
+      likeCount,
+      commentCount,
+      username,
+      extractedPages,
+      provider
+    })}
       </body>
         `);
     event.waitUntil(cache.put(cacheKey, response.clone()));
@@ -311,9 +308,9 @@ const embed = async (req, env, event) => {
   }
 };
 
-const generateFakeEmbed = async (req) => {
+const generateFakeEmbed = async (req: IRequest) => {
   const { text, url, provider } = req.query;
-  if (!text || !url) return error(400);
+  if (!text || !url || Array.isArray(text) || Array.isArray(url)) return error(400);
   return json({
     author_name: decodeURIComponent(text),
     author_url: `https://instagram.com${decodeURIComponent(url)}`,
@@ -325,7 +322,7 @@ const generateFakeEmbed = async (req) => {
   });
 };
 
-const handleError = (e) => {
+const handleError = (e: any) => {
   console.error(e); // Log the error for server-side visibility
   const code = e.status || 500;
   // Return a generic error message
@@ -362,6 +359,6 @@ router.all("*", () =>
 
 // Fetch event listener
 export default {
-  fetch: (request, ...args) =>
-    router.handle(request, ...args).catch(handleError)
-};
+  fetch: (request, env, ctx) =>
+    router.fetch(request, env, ctx).catch(handleError)
+} satisfies ExportedHandler<Env>;

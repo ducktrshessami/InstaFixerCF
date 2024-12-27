@@ -1,7 +1,7 @@
 import { HTMLElement } from "node-html-parser";
 import { DataStructure } from "./dataStructure";
-import { Data } from "./post";
 import parseGraphQLData from "./parseGraphQLData";
+import { Data } from "./post";
 
 const getCaption = (root: HTMLElement): string | undefined => {
   const caption = root.querySelector(".Caption");
@@ -29,7 +29,7 @@ const getLikeCount = (root: HTMLElement): number | undefined => {
   return Number(likes);
 };
 
-const getUsername = (root: HTMLElement): string => {
+const getUsername = (root: HTMLElement): string | undefined => {
   const username = root.querySelector(".UsernameText");
   return username?.textContent;
 };
@@ -166,9 +166,6 @@ export default async (
   }
 
   const body = await fetchPostData(id);
-  ;
-  
-
 
   const extractedData = await extractData(body);
 

@@ -1,13 +1,13 @@
 export interface DataStructure {
-    caption: string;
-    username: string;
+    caption?: string;
+    username?: string;
     imageUrls: string[];
-    extractedPages: {
+    extractedPages?: {
         mediaUrl: string;
         isVideo: boolean;
     }[];
-    videoUrl: string;
-    likeCount: number;
-    commentCount: number;
+    videoUrl?: string;
+    likeCount?: number;
+    commentCount?: number;
     provider: string;
 }
