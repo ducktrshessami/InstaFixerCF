@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "install": "cd collage && pnpm install",
     "build": "tsc",
     "types": "wrangler types",
     "deploy": "wrangler deploy",
