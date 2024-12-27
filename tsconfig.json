@@ -1,17 +1,31 @@
 {
-    "compilerOptions": {
-        "target": "esnext",
-        "module": "esnext",
-        "moduleResolution": "node",
-        "noUncheckedIndexedAccess": true,
-        "lib": [
-            "esnext",
-        ],
-        "types": [
-            "@cloudflare/workers-types"
-        ],
-    },
-    "include": [
-        "./src"
-    ]
+	"compilerOptions": {
+		"target": "es2021",
+		"lib": [
+			"es2021"
+		],
+		"jsx": "react-jsx",
+		"module": "Node16",
+		"moduleResolution": "Node16",
+		"types": [
+			"@cloudflare/workers-types/2023-07-01"
+		],
+		"resolveJsonModule": true,
+		"allowJs": true,
+		"checkJs": false,
+		"noEmit": true,
+		"isolatedModules": true,
+		"allowSyntheticDefaultImports": true,
+		"forceConsistentCasingInFileNames": true,
+		"strict": true,
+		"skipLibCheck": true
+	},
+	"exclude": [
+		"test"
+	],
+	"include": [
+		"instagram-id-to-url-segment.d.ts",
+		"worker-configuration.d.ts",
+		"src/**/*.ts"
+	]
 }
