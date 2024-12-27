@@ -2,5 +2,11 @@
     "name": "collage",
     "version": "1.0.0",
     "main": "index.js",
-    "types": "pkg/collage.d.ts"
+    "types": "pkg/collage.d.ts",
+    "scripts": {
+        "build": "wasm-pack build"
+    },
+    "devDependencies": {
+        "wasm-pack": "^0.13.1"
+    }
 }
